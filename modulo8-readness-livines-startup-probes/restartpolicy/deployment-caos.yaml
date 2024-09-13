@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-caos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-caos
+  template:
+    metadata:
+      labels:
+        app: web-caos
+    spec:
+      containers:
+      - name: web-caos
+        image: kubedevio/simulador-do-caos:v1
+        ports:
+        - containerPort: 3000
+        imagePullPolicy: IfNotPresent # só baixa a imagem se não existir localmente dentro do nó. por padrao é Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-caos
+spec:
+  selector:
+    app: web-caos
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 3000
+    name: http
+    protocol: TCP
+    nodePort: 30000

@@ -1,0 +1,10 @@
+
+Verifique o Acesso Interno no Cluster:
+Tente acessar o serviço de dentro do cluster Kubernetes usando o endereço do serviço:
+
+kubectl run -i --tty --rm debug --image=busybox -- sh
+
+
+Dentro do pod de debug, use o wget ou curl para acessar o serviço:
+
+wget -qO- http://web:80

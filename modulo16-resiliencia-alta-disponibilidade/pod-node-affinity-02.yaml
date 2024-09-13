@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-blue
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-blue
+  template:
+    metadata:
+      labels:
+        app: web-blue
+    spec:
+      containers:
+      - name: web-blue
+        image: cesarags/web-color:blue
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - web-green
+              topologyKey: "kubernetes.io/hostname"
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - web-blue
+              topologyKey: "kubernetes.io/hostname"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-green
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-green
+  template:
+    metadata:
+      labels:
+        app: web-green
+    spec:
+      containers:
+      - name: web-green
+        image: cesarags/web-color:green
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - web-blue
+            topologyKey: "kubernetes.io/hostname"
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - web-green
+              topologyKey: "kubernetes.io/hostname"
+
+
+# nesse manifesto eu tenho 2 deployments, um deles é o web-blue e o outro é o web-green.
+# configurando o podAffinity e podAntiAffinity eu consigo dizer para o k8s onde ele pode ou não criar os pods.
+# no web-blue dar preferencia para criar o pod em um Node que já tenha algum pod web-green, mas se não tiver ele pode criar em outro node.
+# no web-green eu estou dizendo que ele só pode criar o pod em um node que tenha o pod web-blue. Se não tiver ele não pode criar o pod. E de preferencia só ter um pod web-green por Node.
+
+
+# Util quando  queremos 2 serviços proximos um do outro, 
+# como por exemplo um banco de dados e um serviço que faz a leitura desse banco de dados.
+# para reduzir a latencia entre os serviços.
+# ex: criar pod da API  no mesmo Node que o banco de dados.

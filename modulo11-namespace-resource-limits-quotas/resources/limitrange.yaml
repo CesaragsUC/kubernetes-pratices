@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: limitrange-containers
+spec:
+  limits:
+  - default: 
+      cpu: "2"         # Limite máximo de CPU por Container
+      memory: 4Gi      # Limite máximo de memória por Container
+    defaultRequest: 
+      cpu: "1"       # Limite mínimo de CPU por Container
+      memory: 512Mi    # Limite mínimo de memória por Container
+    type: Container 
+
+
+--- 
+
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: limitrange-pods
+spec:
+  limits:
+    - type: Pod 
+      max:
+        cpu: "4"    
+        memory: 8Gi 
+      min:
+        cpu: "0.5"  
+        memory: 1Gi
+
+    
+
+
+#Esse manifesto cria um regra de limites de hardware para os containers e para os pods que forem criados.
+#Onde os containers para ser criado, precisam de um limite mínimo de CPU de 0.2 e memória de 256Mi, e um limite máximo de CPU de 2 e memória de 4Gi.
+#E os pods para serem criados, precisam de um limite mínimo de CPU de 0.5 e memória de 1Gi, e um limite máximo de CPU de 4 e memória de 8Gi.

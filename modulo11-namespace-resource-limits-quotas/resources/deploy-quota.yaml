@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web1
+  template:  
+    metadata:
+      labels:
+        app: web1
+    spec:
+      containers:
+      - name: web1
+        image: cesarags/web-color:blue
+        ports:
+        - containerPort: 80
+        resources:
+          requests: 
+            cpu: "0.5" # 2 replicas 0.5 = 1 cpu, dentro do limite ResourceQuota. Cada réplica solicita 0.5 vCPU para operar.
+            memory: 256Mi # 2 replicas 256mb = 512mb, dentro do limite ResourceQuota
+          limits: 
+            cpu: "1"  # 2 replicas 1 = 2 cpu, dentro do limite ResourceQuota. Cada réplica pode usar até 1 vCPU
+            memory: 2Gi # 2 replicas 2gb = 4gb, dentro do limite ResourceQuota
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web1
+spec:
+  selector:
+    app: web1
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30002
+  type: NodePort
+
+# Consumo de CPU
+# requests.cpu de 0.5: Significa que cada pod tem garantido 0.5 vCPU para seu uso. 
+# O pod pode consumir mais CPU se disponível, até o limite de 1 vCPU, mas tem a garantia de pelo menos 0.5 vCPU.
+# limits.cpu de 1: Define que cada pod não pode usar mais do que 1 vCPU, mesmo que mais CPU esteja disponível no nó.

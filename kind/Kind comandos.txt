@@ -1,0 +1,36 @@
+CRIACAO DE CLUSTERS COM KIND
+
+
+-- Usando o KIND --
+
+criando um cluster
+
+obs:por padrão, o kind nao vem com ingress controller instalado
+
+cmd: kind create cluster 
+ou
+cmd: kind create cluster --name meucluster
+
+
+kind delete cluster
+ou
+kind delete cluster --name <nome_cluster>
+kind delete cluster --name meucluster
+
+sudo kind create cluster --name meucluster --config kind.config.yaml
+
+(carregar imagem local para o kind)
+cmd: kind load --name meucluster docker-image <nome_da_imagem_local>
+
+no caso de dar erro:
+
+( Ports are not available: exposing port TCP 0.0.0.0:80 -> 0.0.0.0:0: listen tcp 0.0.0.0:80: bind: An attempt was made to access a socket in a way forbidden by its access permissions.)
+
+Opcao 1:
+
+net stop http
+net start http
+https://serverfault.com/questions/65717/port-80-is-being-used-by-system-pid-4-what-is-that
+
+- forçar a reconfiguração do kubeconfig para o cluster do kind
+cmd: kind export kubeconfig --name meucluster

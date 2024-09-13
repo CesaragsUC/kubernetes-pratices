@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nginx
+spec:
+  persistentVolumeClaimRetentionPolicy:
+    whenScaled: Delete # Retain, Delete, Recycle. Deleta os volume  que ficaram orfãos quando o pod é escalado para baixo.
+    whenDeleted: Retain # Retain, Delete, Recycle. Mantem o volume quando o pod é deletado
+  serviceName: "nginx" # nome do serviço que será criado
+  selector:
+    matchLabels:
+      app: nginx-state
+  replicas: 6
+  template:
+    metadata:
+      labels:
+        app: nginx-state
+    spec:
+      initContainers:
+        - name: volume-page
+          image: busybox
+          command: ['sh', '-c', 'echo "Hello from $(hostname) the init container" > /app/index.html']
+          volumeMounts:
+          - name:  www
+            mountPath:  /app
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+          name: web
+        volumeMounts:
+          - name:  www
+            mountPath:  /usr/share/nginx/html  
+  volumeClaimTemplates: # cria um volume para cada pod. ex: nginx-0, nginx-1, nginx-2.
+    - metadata:
+        name: www
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "do-block-storage" # "kc get storageclass" para obter o nome do storage class
+        resources:
+          requests:
+            storage: 1Gi      
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  selector:
+    app: nginx-state
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer  
+
+# StatefulSet nao cria replicas, ele cria pods com nomes sequenciais. ex:  nginx-0  nginx-1  nginx-2
+# Ideal para aplicações que precisam de um estado, como banco de dados

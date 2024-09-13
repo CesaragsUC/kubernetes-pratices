@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      initContainers: # containers que são executados antes do container principal
+      - name: start
+        image: cesarags/ubuntu:v1
+        command: ["sh", "-c", "curl -X POST http://web-color -o /app/index.html"]
+        volumeMounts: # monta o volume no container
+          - name: ngninx-vol
+            mountPath:  /app 
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - name:  ngninx-vol
+            mountPath: /usr/share/nginx/html
+      volumes: # volume compartilhado entre os containers
+        - name:  ngninx-vol
+          emptyDir: # significa que o volume é temporário e é deletado quando o pod é deletado
+            sizeLimit: "30Mi" # tamanho máximo do volume
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+  type: LoadBalancer
+
+
+  #  A ideia desse manifesto é criar um volume compartilhado entre os containers,
+  # onde o initContainers: cesarags/ubuntu:v1 irá baixar o arquivo html  do serviço: http://web-color 
+  # e salvar o html no container nginx, que irá servir esse arquivo.
+  # entao quando eu  acessar o nginx, ele vai mostrar o html do web-color

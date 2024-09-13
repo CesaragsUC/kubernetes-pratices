@@ -1,0 +1,164 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mvc
+spec:
+  selector:
+    matchLabels:
+      app: mvc
+  template:
+    metadata:
+      labels:
+        app: mvc
+    spec:
+      containers:
+      - name: mvc
+        image: cesarags/mvc-xgame:v1
+        envFrom:
+        - secretRef:
+            name: xgame-mvc-secret
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mvc
+spec:
+  selector:
+    app: mvc
+  type: LoadBalancer
+  ports:
+  - port: 80 # porta do serviço dentro do cluster
+    targetPort: 8080 # porta do container
+    protocol: TCP
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apixgame
+spec:
+  selector:
+    matchLabels:
+      app: apixgame
+  template:
+    metadata:
+      labels:
+        app: apixgame
+    spec:
+      containers:
+      - name: apixgame
+        image: cesarags/api-xgame:v1
+        envFrom:
+        - secretRef:
+            name: xgame-api-secret
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+      initContainers:
+      - name: database-check
+        image: busybox:1.28
+        command: ['sh', '-c', "until nc -z -v -w5 sql-server 1433; do echo aguardando banco de dados; sleep 1; done"]    
+      - name: rabbit-check
+        image: busybox:1.28
+        command: ['sh', '-c', "until nc -z -v -w5 rabbitmq-xgame 5672; do echo aguardando rabbitmq; sleep 1; done"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apixgame
+spec:
+  selector:
+    app: apixgame
+  type: LoadBalancer
+  ports:
+  - port: 80 # porta do serviço dentro do cluster
+    targetPort: 8080 # porta do container
+    protocol: TCP
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sql-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sql-server
+  template:
+    metadata:
+      labels:
+        app: sql-server
+    spec:
+      containers:
+      - name: sql-server
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        envFrom:
+        - secretRef:
+            name: xgame-db-secret
+        ports:
+          - containerPort: 1433
+            name: sql-server
+            protocol: TCP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name:  sql-server
+spec:
+  selector:
+    app: sql-server
+  type:  ClusterIP
+  ports:
+  - port:  1433
+    targetPort: 1433
+
+---
+
+apiVersion: apps/v1
+kind:  Deployment
+metadata:
+  name: rabbitmq-xgame
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq-xgame
+  template:
+    metadata:
+      name: rabbitmq-xgame
+      labels:
+        app: rabbitmq-xgame
+    spec:
+      containers:
+      - image: rabbitmq:3-management
+        name: rabbitmq-xgame
+        envFrom:
+        - secretRef:
+            name: xgame-rabbitmq-secret
+      restartPolicy: Always
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-xgame
+spec:
+  selector:
+    app: rabbitmq-xgame
+  type:  ClusterIP
+  ports:
+  - name: amqp
+    port: 5672
+    targetPort: 5672
+  - name: management
+    port: 15672
+    targetPort: 15672

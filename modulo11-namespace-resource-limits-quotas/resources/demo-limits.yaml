@@ -1,0 +1,41 @@
+# demo para resource limite CPU
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simulador-do-caos
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: simulador-do-caos
+  template:
+    metadata:
+      labels:
+        app: simulador-do-caos
+    spec:
+      containers:
+      - name: simulador-do-caos
+        image: kubedevio/simulador-do-caos:v1
+        ports:
+        - containerPort: 3000
+        resources:
+          limits:
+            cpu: "500m" # limita o uso de CPU a 500m ou seja 50% de 1 CPU, mas nao termina o pod
+            memory: "512Mi" # limita a memoria em 512Mi, caso exceda o pod é terminado com erro OOMkiller exit 137, e reiniciado.
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: simulador-do-caos
+spec:
+  selector:
+    app: simulador-do-caos
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 3000
+    name: http
+    protocol: TCP
+    nodePort: 30000

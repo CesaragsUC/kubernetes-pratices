@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cron-sorteador
+spec:
+  schedule: "*/1 * * * *" # a cada 1 minutos
+  successfulJobsHistoryLimit: 1 # guarda os 3 últimos jobs bem sucedidos
+  failedJobsHistoryLimit: 1 # guarda os 3 últimos jobs que falharam
+  suspend: false # 
+  concurrencyPolicy: Replace # Replace, Allow, Forbid
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 60 # diz que o job pode ser deletado depois de 60 segundos
+      completions: 2 # diz que o job deve ser executado 2 vezes
+      parallelism: 2 # diz que o job deve ser executado 2 vezes ao mesmo tempo
+      backoffLimit: 6 # diz que se falhar 6 vezes, não tenta mais
+      template:
+        metadata:
+          labels:
+            app: cron-sorteador
+        spec:
+          containers:
+          - name: cron-sorteador
+            image: cesarags/sorteador-go:v1
+            env:
+            - name: NUM_ESCOLHIDO
+              value: "2"
+            - name: NUM_MAXIMO
+              value: "4"
+            - name: DELAY_SORTEIO
+              value: "60"
+          restartPolicy: Never
+
+  # concurrencyPolicy: Replace, Allow, Forbid     
+  # Replace: se um job estiver em execução, o novo job substitui o job em execução     
+  # Allow: se um job estiver em execução, o novo job é executado em paralelo com o job em execução
+  # Forbid: se um job estiver em execução, o novo job não é executado

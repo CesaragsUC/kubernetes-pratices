@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-sorteador
+spec:
+  ttlSecondsAfterFinished: 60 # diz que o job pode ser deletado depois de 60 segundos
+  completions: 2 # diz que o job deve ser executado 2 vezes
+  parallelism: 2 # diz que o job deve ser executado 2 vezes ao mesmo tempo
+  backoffLimit: 6 # diz que se falhar 6 vezes, não tenta mais
+  template:
+    metadata:
+      labels:
+        app: job-sorteador
+    spec:
+      containers:
+      - name: job-sorteador
+        image: cesarags/sorteador-go:v1
+        env:
+        - name: NUM_ESCOLHIDO
+          value: "2"
+        - name: NUM_MAXIMO
+          value: "4"
+        - name: DELAY_SORTEIO
+          value: "10"
+      restartPolicy: Never

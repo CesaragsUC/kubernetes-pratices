@@ -1,0 +1,46 @@
+
+#Service Account - Autenticação para o Container Registry
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: web
+imagePullSecrets: # usando quando for puxar imagens de um registry privado
+  - name:  dockerhub-auth # nome do secret criado
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      serviceAccount: web
+      automountServiceAccountToken: false
+      containers:
+        - name: web
+          image: cesarags/conversao-temperatura:v1
+          ports:
+          - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: LoadBalancer
+
+# automountServiceAccountToken: false
+# serve para desabilitar o montagem do token de serviço no container

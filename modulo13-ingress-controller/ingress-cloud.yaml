@@ -1,0 +1,140 @@
+# explicação sobrre Ingress: https://chatgpt.com/c/6eaaa00e-e950-4fd5-be97-67839b09e8ff
+
+# https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingres-default
+spec:
+  ingressClassName: nginx
+  defaultBackend:
+    service:
+      name: nginx
+      port:
+        number: 80
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingres-dominio-cesar
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+   ingressClassName: nginx
+   rules:
+    - host: "blue.cesarags.com"
+      http:
+        paths:
+        - pathType: Prefix 
+          path: /
+          backend:
+            service:
+              name: web-blue
+              port: 
+                number: 80
+    - host: "green.cesarags.com"
+      http:
+        paths:
+        - pathType: Prefix 
+          path: /
+          backend:
+            service:
+              name: web-green
+              port: 
+                number: 80
+    - host: "color.cesarags.com"
+      http:
+        paths:
+        - pathType: Prefix 
+          path: "/blue"
+          backend:
+            service:
+              name: web-blue
+              port: 
+                number: 80
+        - pathType: Exact 
+          path: "/green"
+          backend:
+            service:
+              name: web-green
+              port: 
+                number: 80
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingres-path
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+   - http:
+      paths:
+      - pathType: Prefix # aceita /blue/qualquercoisa. Muito utilizado em producao
+        path: "/blue"
+        backend:
+          service:
+            name: web-blue
+            port: 
+              number: 80
+      - pathType: Exact # nao aceita /green/ ou /green/qualquercoisa. Pouco utilizado em producao
+        path: "/green"
+        backend:
+          service:
+            name: web-green
+            port: 
+              number: 80
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingres-dominio-nip
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+   ingressClassName: nginx
+   rules:
+    - host: "blue.143.244.222.216.nip.io"
+      http:
+        paths:
+        - pathType: Prefix 
+          path: /
+          backend:
+            service:
+              name: web-blue
+              port: 
+                number: 80
+    - host: "green.143.244.222.216.nip.io"
+      http:
+        paths:
+        - pathType: Prefix 
+          path: /
+          backend:
+            service:
+              name: web-green
+              port: 
+                number: 80
+    - host: "color.143.244.222.216.nip.io"
+      http:
+        paths:
+        - pathType: Prefix 
+          path: "/blue"
+          backend:
+            service:
+              name: web-blue
+              port: 
+                number: 80
+        - pathType: Exact 
+          path: "/green"
+          backend:
+            service:
+              name: web-green
+              port: 
+                number: 80

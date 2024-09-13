@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-blue
+spec:
+  replicas: 15
+  selector:
+    matchLabels:
+      app: web-blue
+  template:
+    metadata:
+      labels:
+        app: web-blue
+    spec:
+      containers:
+      - name: web-blue
+        image: cesarags/web-color:blue
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+      tolerations:
+      - key: "diretoria"
+        operator: "Equal"
+        value: "true"
+        effect: "PreferNoSchedule"
+
+
+
+
+#criar Taint: kc taint node <none_name> key=value1:NoSchedule
+#remover Taint: kc taint node <none_name> key=value1:NoSchedule-
+
+# https://chatgpt.com/c/a52185bf-a873-4aac-bc8d-97a7ff71de10        
+# https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-based-evictions
+
+### NoExecute ###
+# Isso afeta os pods que já estão em execução no nó da seguinte maneira:
+# - Os pods que não toleram a Taint são imediatamente eliminados do Nó.
+# - Os pods que toleram a Taint sem especificar tolerationSecondsem sua especificação de tolerância permanecem vinculados para sempre
+# - Pods que toleram a Taint com um especificado tolerationSecondspermanecem vinculados pelo período de tempo especificado. 
+#   Após esse tempo decorrido, o controlador de ciclo de vida do nó despeja os Pods do Nó.
+
+### NoSchedule ###
+# Nenhum novo Pod será agendado no Nó contaminado, a menos que tenha uma tolerância correspondente.
+# Os Pods atualmente em execução no Nó não são despejados.
+
+### PreferNoSchedule ###
+# PreferNoSchedule é uma versão "preferencial" ou "suave" de NoSchedule.
+# O plano de controle tentará evitar colocar um Pod que não tolere o Taint no Nó, mas não é garantido.
+
+# operator: "Equal" | "Exists" | "DoesNotExist"
+# Equal: O pod só pode ser agendado em nós onde a chave tem um valor específico.
+# Exists: O pod pode ser agendado em qualquer nó que tenha a chave presente, independentemente do valor. O valor pode ser qualquer valor.
+# DoesNotExist: O pod só pode ser agendado em nós onde a chave não está presente..

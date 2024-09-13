@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-blue
+spec:
+  replicas: 7
+  selector:
+    matchLabels:
+      app: web
+      versao: blue
+  strategy:
+    type: RollingUpdate    
+    rollingUpdate:
+      maxSurge: 50% # 50% a mais de pods do que o desejado
+      maxUnavailable: 20% # 20% dos pods podem estar fora do ar
+  template:
+    metadata:
+      labels:
+        app: web
+        versao: blue
+    spec:
+      containers:
+      - name: web
+        image: cesarags/web-color:blue
+        ports:
+        - containerPort: 80
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-green
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+      versao: green
+  strategy:
+    type: RollingUpdate    
+    rollingUpdate:
+      maxSurge: 50% # 50% a mais de pods do que o desejado
+      maxUnavailable: 20% # 20% dos pods podem estar fora do ar
+  template:
+    metadata:
+      labels:
+        app: web
+        versao: green
+    spec:
+      containers:
+      - name: web
+        image: cesarags/web-color:green
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
+
+# Canary Deployment
+# Essa estrategia é utilizada para testar uma nova versão em um grupo de usuarios antes de liberar para todos.
+# Nesse caso, 70% dos usuarios irão para a versao blue e 30% para a versao green.
+

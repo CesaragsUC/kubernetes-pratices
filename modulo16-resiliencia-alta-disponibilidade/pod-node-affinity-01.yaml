@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: cesarags/web-color:blue
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi  
+      affinity:
+        # nodeAffinity: #https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+          # requiredDuringSchedulingIgnoredDuringExecution:
+          #   nodeSelectorTerms:
+          #   - matchExpressions:
+          #     - key: gpuprocess
+          #       operator: In # https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#operators
+          #       values:
+          #       - "true"
+        nodeAffinity: #https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                - key: disktype
+                  operator: In
+                  values:
+                  - ssd
+            - weight: 100
+              preference:
+                matchExpressions:
+                - key: region
+                  operator: In
+                  values:
+                  - regionB
+
+# preferredDuringSchedulingIgnoredDuringExecution:
+#  Nesse caso ele vai dar preferencia para Nodes que tenham o label disktype=ssd, mas se não tiver ele vai criar o pod em outro node.                  
+
+# requiredDuringSchedulingIgnoredDuringExecution:
+#  Nesse caso ele só vai criar o pod em nodes que tenham o label disktype=ssd. Se não tiver ele não vai criar o pod.
+  # e o status vai ficar pendente.

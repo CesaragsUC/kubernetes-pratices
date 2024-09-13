@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-caos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-caos
+  template:
+    metadata:
+      labels:
+        app: web-caos
+    spec:
+      containers:
+      - name: web-caos
+        image: registry.k8s.io/busybox
+        ports:
+        - containerPort: 3000
+        command: ["/bin/sh", "-c", "while true; do echo 'ok' > /tmp/health; sleep 5; done"] # verifica se no diretório /tmp/health existe o arquivo health, caso nao exista, ele reinicia o container.
+        livenessProbe:
+          exec:
+           command:
+              - cat
+              - /tmp/health
+          initialDelaySeconds: 5   # tempo para iniciar a verificação 
+          periodSeconds: 5 # tempo entre as verificações
+          failureThreshold: 1 # quantidade de falhas para reiniciar o container. Ex: 3 significa que se o container falhar 3 vezes seguidas, ele reinicia
+          successThreshold: 1 # quantidade de sucessos para parar de reiniciar o container. Ex: 1 significa que se o container falhar 1 vez e depois passar no teste, ele para de reiniciar
+          timeoutSeconds: 5 # tempo para o probe falhar. Ex: se o probe demorar mais que 5 segundos para responder, ele considera como falha.
+          
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-caos
+spec:
+  selector:
+    app: web-caos
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 3000
+    name: http
+    protocol: TCP
+    nodePort: 30000

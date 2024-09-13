@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-caos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-caos
+  template:
+    metadata:
+      labels:
+        app: web-caos
+    spec:
+      containers:
+      - name: web-caos
+        image: registry.k8s.io/busybox
+        ports:
+        - containerPort: 3000
+        command: ["/bin/sh", "-c", "sleep 10; touch /tmp/health; sleep 30;"] 
+        startupProbe:
+          exec:
+           command:
+              - cat
+              - /tmp/health
+          periodSeconds: 10 # tempo entre as verificações
+          failureThreshold: 30 # quantidade de falhas para reiniciar o container. 
+
+          
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-caos
+spec:
+  selector:
+    app: web-caos
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 3000
+    name: http
+    protocol: TCP
+    nodePort: 30000

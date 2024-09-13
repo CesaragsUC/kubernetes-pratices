@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: web
+  strategy:
+    type: Recreate    
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: cesarags/web-color:green
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
+
+# Recreate
+# Essa estrategia é a mais simples, ela simplesmente mata todos os pods e cria novos com a nova versão.
+# O problema é que havera downtime, pois todos os pods antigos serão mortos antes dos novos serem criados. 

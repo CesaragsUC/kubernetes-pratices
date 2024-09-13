@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: exec
+  labels:
+    app: exec
+spec:
+    containers:
+    - name: exec
+      image: busybox
+      command: # é mesma coisa qeu o EntryPoint do docker
+        - /bin/sh
+      args:
+        - -c
+        - touch /tmp/teste.txt; sleep 120
+    restartPolicy: Never 
+
+#  restartPolicy: Never
+# -Descrição: O Kubernetes não reiniciará o container, independentemente do motivo pelo qual ele parou.
+# -Uso recomendado: Esta política é útil para Pods que executam tarefas de curta duração, 
+#  como jobs de batch ou scripts de migração de banco de dados, 
+#  onde o container deve ser executado uma única vez e não deve ser reiniciado se falhar ou completar com sucesso.
+# -Exemplo de cenário: Você tem um Pod configurado para executar uma tarefa de backup de dados uma vez por dia.
+# Se o backup falhar, você quer que o administrador investigue a falha em vez de tentar reiniciá-lo automaticamente.

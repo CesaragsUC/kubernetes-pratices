@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-blue
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: web-blue
+  template:
+    metadata:
+      labels:
+        app: web-blue
+    spec:
+      containers:
+      - name: web-blue
+        image: cesarags/web-color:blue
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - web-blue
+            topologyKey: "kubernetes.io/hostname"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-green
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-green
+  template:
+    metadata:
+      labels:
+        app: web-green
+    spec:
+      containers:
+      - name: web-green
+        image: cesarags/web-color:green
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+      affinity:
+        podAntiAffinity:
+          # preferredDuringSchedulingIgnoredDuringExecution:
+          # - weight: 100
+          #   podAffinityTerm:
+          #     labelSelector:
+          #       matchExpressions:
+          #       - key: app
+          #         operator: In
+          #         values:
+          #         - web-blue
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - web-green
+            topologyKey: "topology.kubernetes.io/region" # nao vai permitir que tenha mais de um pod com a mesma label app: web-green na mesma região.
+
+
+# podAntiAffinity => requiredDuringSchedulingIgnoredDuringExecution:  
+# Nao vai permitir  ter mais de um pod com a mesma label app: web-blue no mesmo Node          
+
+
+# podAntiAffinity => preferredDuringSchedulingIgnoredDuringExecution:  
+# Vai tentar evitar que tenha mais de um pod com a mesma label app: web-blue no mesmo Node
+
+# podAntiAffinity => requiredDuringSchedulingIgnoredDuringExecution => topologyKey: "topology.kubernetes.io/region"
+# Não vai permitir que tennha mais de um pod com a mesma label app: web-blue na mesma região.

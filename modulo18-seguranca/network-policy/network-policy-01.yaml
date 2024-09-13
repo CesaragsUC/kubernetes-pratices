@@ -1,0 +1,51 @@
+
+# Network Policy - Policy com restrição simples
+
+#Network Policy 
+# sobre: https://chatgpt.com/c/66e395d6-c3e4-800d-a01b-4e982981855c
+# Comando para instalação do Calico
+
+# bash
+# kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/tigera-operator.yaml
+
+# kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/custom-resources.yaml
+
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: nginx-nci-policy
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: nginx # Seleciona todos os pods com a label app: nginx
+  policyTypes:
+  - Ingress # Ingress serve para permitir o tráfego de entrada
+ # - Egress # Egress serve para permitir o tráfego de saída
+  ingress: # Permite o tráfego de entrada
+  - from:
+    - podSelector:
+        matchLabels:
+          app: curl # Permite que o tráfego de entrada venha de pods com a label app: curl
+    ports:
+    - protocol: TCP
+      port: 80
+  egress: # Permite o tráfego de saída
+  - to: # Permite que o tráfego de saída vá para
+    - podSelector:
+        matchLabels:
+          app: nginx # Permite que o tráfego de saída vá para pods com a label app: nginx
+    ports:
+    - protocol: TCP
+      port: 80  
+
+  # Após aplicar,  precia recirar o Pod que quer o acesso para que a NetworkPolicy seja aplicada
+  # kc run curl --image cesarags/ubuntu:v1 -it -l app=curl --rm -- /bin/bash
+  # obs: (-l app=curl) é a label que o pod curl terá, para que a NetworkPolicy permita o acesso ao Pod nginx
+
+
+  # NetworkPolicy
+  # Usamos quando queremos que um pod tenha acesso a outro pod, ou a um conjunto de pods, ou a um namespace, ou a um conjunto de namespaces.
+  # NetworkPolicy é um recurso que permite que você especifique como os pods são autorizados a se comunicar uns com os outros.
+  # Pode também bloquear o tráfego de entrada e saída de um pod.

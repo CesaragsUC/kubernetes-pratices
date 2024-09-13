@@ -1,0 +1,190 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mvc
+spec:
+  selector:
+    matchLabels:
+      app: mvc
+  template:
+    metadata:
+      labels:
+        app: mvc
+    spec:
+      containers:
+      - name: mvc
+        image: cesarags/mvc-xgame:v1
+        env: 
+        - name: XGameAPIUrl
+          value: "http://apixgame"
+        - name: ConnectionStrings__DefaultConnection
+          value: "Server=sql-server;Database=SimpleDemoAPI;MultipleActiveResultSets=true;User Id=sa;Password=7f57544f-99fc-4ad4-a64d-932b1b9208c0;TrustServerCertificate=true;Encrypt=false"
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mvc
+spec:
+  selector:
+    app: mvc
+  type: NodePort
+  ports:
+  - port: 80 # porta do serviço dentro do cluster
+    targetPort: 8080 # porta do container
+    nodePort: 30001
+    protocol: TCP
+    # Kubernetes encaminha o tráfego recebido na porta 30001 para a porta 80 do serviço, 
+    # que então encaminha para a targetPort  8080 no containers.
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apixgame
+spec:
+  selector:
+    matchLabels:
+      app: apixgame
+  template:
+    metadata:
+      labels:
+        app: apixgame
+    spec:
+      containers:
+      - name: apixgame
+        image: cesarags/api-xgame:v1
+        env: 
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Docker
+        - name: ConnectionStrings__DefaultConnection
+          value: "Server=sql-server;Database=SimpleDemoAPI;MultipleActiveResultSets=true;User Id=sa;Password=7f57544f-99fc-4ad4-a64d-932b1b9208c0;TrustServerCertificate=true;Encrypt=false"
+        - name: "MessageQueueConnection__MessageBus"
+          value: "host=rabbitmq-xgame:5672;publisherConfirms=true;timeout=30;username=guest;password=guest"
+        - name: "AppSettings__Secret"
+          value: "7k7DFwDA0!6}%;*SAFNco>Nw3PQM0:coX=znAx7]D)b}i~]GO6$Sa^{OtA{</fC"
+        - name: "AppSettings__ExpiracaoHoras"
+          value: "2"
+        - name: "AppSettings__Emissor"
+          value: "MeuSistema"
+        - name: "AppSettings__ValidoEm"
+          value: "http://mvc:30001"
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+      initContainers:
+      - name: database-check
+        image: busybox:1.28
+        command: ['sh', '-c', "until nc -z -v -w5 sql-server 1433; do echo aguardando banco de dados; sleep 1; done"]    
+      - name: rabbit-check
+        image: busybox:1.28
+        command: ['sh', '-c', "until nc -z -v -w5 rabbitmq-xgame 5672; do echo aguardando rabbitmq; sleep 1; done"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apixgame
+spec:
+  selector:
+    app: apixgame
+  type: NodePort
+  ports:
+  - port: 80 # porta do serviço dentro do cluster
+    targetPort: 8080 # porta do container
+    nodePort: 30002
+    protocol: TCP
+    # Kubernetes encaminha o tráfego recebido na porta 30002 para a porta 80 do serviço, 
+    # que então encaminha para a targetPort  8080 no containers.
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sql-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sql-server
+  template:
+    metadata:
+      labels:
+        app: sql-server
+    spec:
+      containers:
+      - name: sql-server
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          - name: ACCEPT_EULA
+            value: "Y"
+          - name: MSSQL_SA_PASSWORD
+            value: "7f57544f-99fc-4ad4-a64d-932b1b9208c0"
+          # - name: MSSQL_PID
+          #   value: "Express"
+        ports:
+          - containerPort: 1433
+            name: sql-server
+            protocol: TCP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name:  sql-server
+spec:
+  selector:
+    app: sql-server
+  type:  ClusterIP
+  ports:
+  - port:  1433
+    targetPort: 1433
+
+---
+
+apiVersion: apps/v1
+kind:  Deployment
+metadata:
+  name: rabbitmq-xgame
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq-xgame
+  template:
+    metadata:
+      name: rabbitmq-xgame
+      labels:
+        app: rabbitmq-xgame
+    spec:
+      containers:
+      - image: rabbitmq:3-management
+        name: rabbitmq-xgame
+        env:
+          - name: RABBITMQ_DEFAULT_USER
+            value: "guest"
+          - name: RABBITMQ_DEFAULT_PASS
+            value: "guest"
+      restartPolicy: Always
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-xgame
+spec:
+  selector:
+    app: rabbitmq-xgame
+  type:  ClusterIP
+  ports:
+  - name: amqp
+    port: 5672
+    targetPort: 5672
+  - name: management
+    port: 15672
+    targetPort: 15672

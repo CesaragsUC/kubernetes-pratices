@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: web
+  template:  
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: cesarags/web-color:blue
+        ports:
+        - containerPort: 80
+        resources:
+          requests: # requisitos minimos
+            cpu: "0.4" 
+            memory: 256Mi 
+          limits: # limites maximos
+            cpu: "2"  
+            memory: 1.5Gi
+      - name: busybox
+        image: busybox
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do sleep 3600; done"]
+        resources:
+          requests: # requisitos minimos
+            cpu: "0.2" 
+            memory: 256Mi 
+          limits: # limites maximos
+            cpu: "2"  
+            memory: 1.5Gi
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector:
+    app: web
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30001
+  type: NodePort

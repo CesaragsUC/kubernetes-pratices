@@ -1,0 +1,19 @@
+Criando uma label customizada em um nó:
+
+- kubectl label nodes <nome-do-nó> <chave>=<valor>
+
+ex: kubectl label nodes <nome-do-nó> setor=financeiro
+ex: kubectl label nodes <nome-do-nó> gpu=true
+
+Verificando a label:
+kubectl get nodes <nome-do-nó> --show-labels
+
+
+#kubectl get node <nome-do-nó> --show-labels -> isso ira mostrar os labels do nó
+#kubectl get nodes -l diretoria -> isso ira mostrar os nodes com o label diretoria
+
+-Removendo uma label:
+kubectl label nodes <nome-do-nó> setor=financeiro-
+ou
+kubectl label nodes <nome-do-nó> setor-
+

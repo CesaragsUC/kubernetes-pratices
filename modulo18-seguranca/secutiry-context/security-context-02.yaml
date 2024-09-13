@@ -1,0 +1,72 @@
+
+#Security Context - Tratando volume e File System
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      securityContext: # nivel de POD
+            fsGroup: 1000 # fsGroup, só pode ser aplicado no nivel de POD
+      containers:
+      - name: web
+        securityContext: # nivel de Container
+            runAsNonRoot: true
+            runAsUser: 1000 # ID do usuário
+            runAsGroup: 1000 # ID do grupo
+        image: cesarags/conversao-temperatura:v1
+        ports:
+        - containerPort: 8080
+        volumeMounts: #Cria um volume para o container
+          - mountPath: /temp-dir
+            name: tmp-vol
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts: #Cria um volume para o container
+          - mountPath: /temp-dir
+            name: tmp-vol
+      volumes:
+        - name: tmp-vol
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: LoadBalancer
+
+## ---------fsGroup--------------
+# fsGroup: 1000 -> O fsGroup é um grupo de usuários que tem permissão para acessar o volume.
+#Nesse exemplo, o fsGroup define que para acessar o volume "tmp-vol", o usuário precisa ser do grupo 1000.
+
+
+## ---------SecurityContext--------------
+# runAsNonRoot: true -> O container não será executado como root
+# No nivel de POD, o runAsUser e runAsGroup, são aplicados a todos os containers do POD
+# No nivel de Container, o runAsUser e runAsGroup, são aplicados apenas ao container especificado
+# caso use no nivel de POD, todos os containder deverão ter o mesmo usuário e grupo. Caso contrario, o container não será executado.
+
+#kc exec -it <nome-pod> -- /bin/bash
+#No caso de ter mais de um container no POD, é necessário especificar o container que deseja acessar
+#ex: kc exec -it <nome-pod> --container web -- /bin/bash
+
+#whoami -> para verificar o usuário
+#cat  /etc/passwd -> para a lista dos usuários cadastrados dentro da imagem do container
+# ex: node:x:1000:1000::/home/node:/bin/bash ( runAsUser: 1000)
+# Desse como quando eu entrar no container, o usuário será o node.

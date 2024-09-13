@@ -1,0 +1,34 @@
+
+CRIACAO DE CLUSTERS COM K3D
+
+obs: ja vem com ingress controller (traefik) instalado.
+
+ -- Usanso o K3D -- 
+
+k3d cluster create meucluster --servers 3 --agents 3 
+ou
+k3d cluster create meucluster --servers 3 --agents 3 
+-p "30000:30000@loadbalancer" 
+-p "30001:30001@loadbalancer" 
+-p "30002:30002@loadbalancer" 
+-p "30003:30003@loadbalancer"
+-p "5432:30004@loadbalancer" 
+-p "1433:30005@loadbalancer"
+-p "27017:30006@loadbalancer" 
+-p "5672:30007@loadbalancer"
+-p "9092:30008@loadbalancer"
+
+
+k3d cluster create meucluster --servers 3 --agents 3 -p "30000:30000@loadbalancer" -p "30001:30001@loadbalancer" -p "30002:30002@loadbalancer" -p "30003:30003@loadbalancer"
+
+k3d cluster start meucluster
+
+k3d cluster stop meucluster
+
+k3d cluster delete meucluster
+
+
+
+*******************************************************************************************************************
+
+florA@2022f

@@ -1,0 +1,61 @@
+
+- listar historico de versao Deployment
+cmd: kubectl rollout history deployment <nome_deploy>
+
+- voltar versao anterior do Deployment
+cmd: kubectl rollout undo deploy <nome_deploy> 
+
+
+***********************************************************
+
+-- Commandos uteis --
+
+https://kubernetes.io/docs/reference/kubectl/generated/kubectl_run/4
+
+(build na dockerfile e ja subir pro docker hub)
+cmd: docker build -t cesarags/xgame-api:v1 --push .
+
+(criar um pod com rabbitmq)
+cmd: kubectl run rabbitmq --image=rabbitmq:3.13-management --port=5672 --port=15672 
+
+(criar um pod com sql-server)
+cmd: kubectl run sq-server --image=mcr.microsoft.com/mssql/server:2019-latest --port=1433 --env="SA_PASSWORD=7f57544f-99fc-4ad4-a64d-932b1b9208c0" --env="ACCEPT_EULA=Y"
+
+***********************************************************
+
+ -- Criar um pod com Busybox --
+
+cmd: kubectl run busybox --image=busybox --restart=Never -- /bin/sh -c "while true; do sleep 3600; done"  (mantem o Pod rodando mesmo após a execução do comando)
+(caso queira criar dentro do mesmo namespace do pod)
+ex: kubectl exec -it busybox -n production -- /bin/sh
+
+ou 
+kubectl run busybox --image=busybox --restart=Never -- /bin/sh -c "echo 'Hello, World!'"  (encerra após o comando ser executado)
+
+(entrar dentro do busybox para executar comandos)
+cmd: kubectl exec -it busybox -n production -- /bin/sh
+
+ex: ping web (nome do svc)
+ex: nslookup web (Para verificar se o DNS está funcionando e o serviço pode ser resolvido:)
+ex: wget -qO- http://web (Se você quiser fazer uma solicitação HTTP para o serviço web:)
+
+***********************************************************
+
+-- Criando Pod com imagem Linux para testar cominicação com Pod --
+
+kubectl run ubuntu --image=ubuntu --restart=Never -- /bin/sh -c "sleep 3600"
+
+bere, add curl 
+apt-get update && apt-get install -y curl
+
+enter in Pod
+kubectl exec -it ubuntu -- /bin/sh
+
+ex: curl http://web (Ou, se você tiver curl instalado:)
+
+
+
+***********************************************************
+
+(rodar commando dentro do container POD)
+cmd: kubectl exec -it  app-configuracao-d8b469495-xkdzd -- /bin/bash

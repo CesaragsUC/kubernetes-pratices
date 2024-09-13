@@ -1,0 +1,106 @@
+
+#RBAC - Role e Role Binding
+
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name:  full-access
+rules:
+- apiGroups: [""]  # 
+  resources: ["namespaces"] # 
+  verbs: ["get","list"]  # 
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role # Role é um recurso que dá permissão a um usuário ou grupo dentro de um namespace
+metadata:
+  name:  full-access-role #nome da Role
+  namespace: default
+rules:
+- apiGroups: [""]  # 
+  resources: ["pods"] # 
+  verbs: ["get","list"]  # 
+- apiGroups: ["apps"]  # 
+  resources: ["deployments"] # 
+  verbs: ["get","list"]  # 
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding # RoleBinding é um recurso que dá permissão a um Role
+metadata:
+  name: kube-board-role-binding-default
+  namespace: default
+subjects: # subjects é um array de objetos que contém informações sobre os usuários ou grupos que têm permissão
+- kind: ServiceAccount
+  name: kube-board
+  namespace: default # Verificar em qual namespace o ServiceAccount foi criado
+roleRef: # roleRef é um objeto que contém informações sobre o ClusterRole que você deseja vincular
+  kind: Role
+  name: full-access-role # Nome do Role
+  apiGroup: rbac.authorization.k8s.io  
+
+
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding # ClusterRoleBinding é um recurso que dá permissão a um ClusterRole
+metadata:
+  name: kube-board-role-binding
+subjects: # subjects é um array de objetos que contém informações sobre os usuários ou grupos que têm permissão
+- kind: ServiceAccount
+  name: kube-board
+  namespace: default # Verificar em qual namespace o ServiceAccount foi criado
+roleRef: # roleRef é um objeto que contém informações sobre o ClusterRole que você deseja vincular
+  kind: ClusterRole
+  name: full-access # Nome do ClusterRole
+  apiGroup: rbac.authorization.k8s.io  
+
+
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-board
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-board
+spec:
+  selector:
+    matchLabels:
+      app: kube-board
+  template:
+    metadata:
+      labels:
+        app: kube-board
+    spec:
+      serviceAccountName: kube-board
+      containers:
+        - name: kube-board
+          image: cesarags/kube-board:v1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 250Mi
+          ports:
+          - containerPort: 3000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-board
+spec:
+  selector:
+    app: kube-board
+  ports:
+  - port: 80
+    targetPort: 3000
+  type: LoadBalancer

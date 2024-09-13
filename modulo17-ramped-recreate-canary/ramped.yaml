@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: web
+  strategy:
+    type: RollingUpdate    
+    rollingUpdate:
+      maxSurge: 50% # 50% a mais de pods do que o desejado
+      maxUnavailable: 20% # 20% dos pods podem estar fora do ar
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: cesarags/web-color:blue
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
+
+#RollingUpdate
+# Essa estrategia é a mais utilizada, ela atualiza os pods um a um, garantindo que sempre haja uma quantidade minima de pods rodando.
+# O maxSurge define a quantidade de pods a mais que podem ser criados, e o maxUnavailable define a quantidade de pods que podem estar fora do ar.
+

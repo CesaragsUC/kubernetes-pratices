@@ -1,0 +1,7 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name:  web
+spec:
+  type: ExternalName # isso faz com que o serviço seja um serviço externo e possa ser acessado por utro namespace
+  externalName: web.production.svc.cluster.local #o serviço web pode ser acessado por qualquer Pod em outro namespace: ex curl http://web ou curl http://web.producao.svc.cluster.local

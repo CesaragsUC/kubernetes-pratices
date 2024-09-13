@@ -1,0 +1,19 @@
+ --- CRIANDO CONFIG MAP ---
+
+(via cmd) forma imperativa
+kubectl create configmap app-config --from-literal=APP_NAME="Aplicação Config Map" --from-literal=APP_VERSION="1.5" --from-literal=APP_AUTHOR="Cesar"
+
+(enviando para um arquivo) forma imperativa
+kubectl create configmap app-config --from-literal=APP_NAME="Aplicação Config Map" --from-literal=APP_VERSION="1.5" --from-literal=APP_AUTHOR="Cesar" --from-file arquivo.config
+
+(listar)
+cmd: kubectl get configmap
+
+(mostrar os valores)
+cmd: kubectl describe configmap <nome-config-map>
+
+(para deletar)
+cmd: kubectl delete configmap <nome-config-map>
+
+
+kubectl create configmap kubenews-app --from-literal=DB_DATABASE="Aplicação Config Map" --from-literal=APP_VERSION="1.5" --from-literal=APP_AUTHOR="Cesar" --from-file arquivo.config

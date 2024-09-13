@@ -1,0 +1,25 @@
+-- NAMESPACES --
+
+IMPERATIVA
+
+kubectl create namespace homologacao
+
+
+
+DECLARATIVA
+
+deploy.yaml
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: producao 
+
+
+kubectl apply -f deploy.yaml -n producao
+kubectl port-forward service/web 8080:80 -n producao
+kubectl delete namespace homologacao (isso vai matar todos os pods dentro desse namespace)
+
+ - testar  comunicacao namespace entre default e customizado:
+kubectl run  curl -it --image ubuntu -- /bin/bash (cria um pod no namespace default para tentar se comunicar com poddentro e outro namespace)
+curl http://web.producao.svc.cluster.local (procure service web no no namespace producao no meu cluster local)

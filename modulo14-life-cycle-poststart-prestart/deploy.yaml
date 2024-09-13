@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+        lifecycle:
+          postStart: # executado após o container ser criado
+            exec:
+              command: ["/bin/sh", "-c", "curl -X POST https://webhook.site/606530ea-9abe-411e-8b34-740c554d740a -d 'Post Start Exec'"]
+          preStop: # executado antes do container ser parado
+            exec:
+               command: ["/bin/sh", "-c", "curl -X POST https://webhook.site/606530ea-9abe-411e-8b34-740c554d740a -d 'Pre Stop Exec'"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
+
+
+  # https://webhook.site/
